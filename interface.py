@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 from process_contract import process_contract  # Import the process_contract function
-from compliance_checker import process_tasks_df  # Import the updated function
+from compliance_checker import validate_compliance  # Import the updated function
+import openai
+import json  # Add this import
 
 def main():
     st.title("Contract Conditions Extraction and Verification")
@@ -29,15 +31,23 @@ def main():
                     st.error(f"CSV must contain the following columns: {', '.join(required_columns)}")
                 else:
                     st.success("Files uploaded successfully!")
-
+                    client = openai.OpenAI(api_key=api_key)
                     # Process the contract file and extract terms
-                    terms_json = process_contract(contract_file, api_key)
+                    terms_json = process_contract(contract_file, tasks_file, client)
 
-                    # Display the extracted terms
                     st.json(terms_json)
 
+                    # Save the tasks DataFrame to a CSV file
+                    tasks_csv_path = "tasks_data.csv"  # Specify the path
+                    tasks_df.to_csv(tasks_csv_path, index=False)  # Save DataFrame to CSV
+
+                    # Save the extracted terms to a JSON file
+                    json_file_path = "extracted_terms.json"
+                    with open(json_file_path, 'w') as json_file:
+                        json_file.write(terms_json)
+
                     # Process the tasks DataFrame for compliance
-                    updated_tasks_df = process_tasks_df(tasks_df, terms_json)
+                    updated_tasks_df = validate_compliance(tasks_csv_path, json_file_path, client)
 
                     # Display the updated DataFrame
                     st.table(updated_tasks_df)
