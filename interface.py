@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from process_contract import process_contract  # Import the process_contract function
 from compliance_checker import validate_compliance  # Import the updated function
+from internal_evaluation import evaluate_answers
 import openai
 import json  # Add this import
 
@@ -35,6 +36,7 @@ def main():
                     # Process the contract file and extract terms
                     terms_json = process_contract(contract_file, tasks_file, client)
 
+                    st.write("Analysis of the provided tasks will appear under the generated JSON file. It's advisable to collapse JSON for better visibility.")
                     st.json(terms_json)
 
                     # Save the tasks DataFrame to a CSV file
@@ -49,8 +51,12 @@ def main():
                     # Process the tasks DataFrame for compliance
                     updated_tasks_df = validate_compliance(tasks_csv_path, json_file_path, client)
 
+                    accuracy_score = evaluate_answers(updated_tasks_df)
+                    st.write(accuracy_score)
+
                     # Display the updated DataFrame
                     st.table(updated_tasks_df)
+                    
         else:
             st.error("Please fill in all fields.")
 
